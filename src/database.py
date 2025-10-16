@@ -68,8 +68,8 @@ def create_admin_user():
             "name": "Administrador",
             "email": "admin@wyden365.com",
             "password": hashed_password,
-            "favoriteteam": None,
-            "isAdmin": True  # ⭐ CORRIGIDO para minúsculo
+            "favorite_team": None,
+            "is_admin": True  # ⭐ CORRIGIDO para minúsculo
         }
         
         response = supabase.table("users").insert(admin_data).execute()
@@ -107,7 +107,7 @@ def populate_test_data():
             "email": "joao@teste.com",
             "password": test_password,
             "favoriteteam": "Atlética WYDEN",
-            "isAdmin": False
+            "is_admin": False
         }).execute()
         
         # Criar carteira para usuário teste
