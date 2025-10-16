@@ -21,4 +21,8 @@ def register_page():
         except Exception as e:
             st.error(f"Erro ao registrar: {e}")
 
-    st.markdown("Já tem uma conta? [Faça login](/?page=login)")
+    st.markdown("---")
+    st.write("Já tem uma conta?")
+    if st.button("Faça login"):
+        st.session_state["page"] = "login"
+        st.rerun()

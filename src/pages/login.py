@@ -21,4 +21,8 @@ def login_page():
         except Exception as e:
             st.error(f"Erro ao fazer login: {e}")
 
-    st.markdown("Não tem uma conta? [Registre-se](/?page=register)")
+    st.markdown("---")
+    st.write("Não tem uma conta?")
+    if st.button("Registre-se"):
+        st.session_state["page"] = "register"
+        st.rerun()

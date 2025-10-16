@@ -91,11 +91,6 @@ def render_header():
                     
     else:
         auth_cols = right_col.columns(2)
-        if auth_cols[0].button("Registre-se", key="hdr_register"):
-            set_page("register")
-        if auth_cols[1].button("Login", key="hdr_login"):
-            set_page("login")
-
     # Fecha a div do header
     st.markdown("</div>", unsafe_allow_html=True)
 
