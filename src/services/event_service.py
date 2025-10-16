@@ -75,3 +75,26 @@ class EventService:
         except Exception as e:
             print(f"Erro ao deletar evento: {e}")
             return False
+
+    @staticmethod
+    def get_enum_values(enum_name):
+        try:
+            # Supabase/PostgreSQL armazena os valores de ENUM na tabela pg_enum
+            # Precisamos encontrar o oid do tipo e depois buscar seus valores
+            # Esta é uma consulta mais complexa que pode variar ligeiramente dependendo da versão do Supabase/PostgreSQL
+            # Uma abordagem mais simples para Streamlit é ter uma lista predefinida ou buscar de uma tabela de configuração
+            # No entanto, se os enums são do DB, vamos tentar buscar.
+            
+            # Primeiro, obter o OID do tipo enum
+            type_oid_response = supabase.from_("pg_type").select("oid").eq("typname", enum_name).execute()
+            type_oid = type_oid_response.data[0]["oid"]
+
+            # Em seguida, obter os valores do enum usando o OID
+            enum_values_response = supabase.from_("pg_enum").select("enumlabel").eq("enumtypid", type_oid).order("enumsortorder").execute()
+            
+            if enum_values_response.data:
+                return [item["enumlabel"] for item in enum_values_response.data]
+            return []
+        except Exception as e:
+            print(f"Erro ao buscar valores do enum {enum_name}: {e}")
+            return []

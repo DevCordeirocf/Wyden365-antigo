@@ -2,19 +2,29 @@ import streamlit as st
 from src.controllers.event_controller import EventController
 from src.controllers.betting_controller import BettingController
 from src.controllers.wallet_controller import WalletController
+from src.services.event_service import EventService # Importar o EventService para acessar get_enum_values
 from datetime import datetime
 
 def manage_events_page():
     st.title("Gerenciar Eventos (Minimalista)")
 
+    # Obter os valores dos enums do Supabase
+    sport_types = EventService.get_enum_values("sport_type")
+    team_types = EventService.get_enum_values("team_type")
+
+    if not sport_types:
+        sport_types = ["Futsal", "Vôlei", "xadrez", "Vôlei de areia", "Basquete"] # Fallback
+    if not team_types:
+        team_types = ["Lefort", "Sistemática", "Intrépidos", "Arritmia", "Indomável", "Adrenegértica"] # Fallback
+
     st.subheader("Criar Novo Evento")
     with st.form("create_event_form", clear_on_submit=True):
-        sport = st.text_input("Esporte")
-        team1 = st.text_input("Time 1")
-        team2 = st.text_input("Time 2")
-        odds_team1 = st.number_input("Odds Time 1", min_value=0.01, format="%.2f", value=1.0)
-        odds_team2 = st.number_input("Odds Time 2", min_value=0.01, format="%.2f", value=1.0)
-        date_str = st.text_input("Data e Hora (YYYY-MM-DD HH:MM)", placeholder="Ex: 2025-10-26 19:00")
+        sport = st.selectbox("Esporte", sport_types, key="create_sport")
+        team1 = st.selectbox("Time 1", team_types, key="create_team1")
+        team2 = st.selectbox("Time 2", team_types, key="create_team2")
+        odds_team1 = st.number_input("Odds Time 1", min_value=0.01, format="%.2f", value=1.0, key="create_odds1")
+        odds_team2 = st.number_input("Odds Time 2", min_value=0.01, format="%.2f", value=1.0, key="create_odds2")
+        date_str = st.text_input("Data e Hora (YYYY-MM-DD HH:MM)", placeholder="Ex: 2025-10-26 19:00", key="create_date")
         
         submitted = st.form_submit_button("Criar Evento")
 
@@ -48,23 +58,35 @@ def manage_events_page():
             # Formulário para atualizar evento
             with st.form(f"update_event_form_{event.id}"):
                 st.write(f"Atualizar Evento {event.id}")
-                new_sport = st.text_input("Esporte", value=event.sport, key=f"sport_{event.id}")
-                new_team1 = st.text_input("Time 1", value=event.team1, key=f"team1_{event.id}")
-                new_team2 = st.text_input("Time 2", value=event.team2, key=f"team2_{event.id}")
+                
+                # Encontrar o índice atual para preselecionar no selectbox
+                current_sport_index = sport_types.index(event.sport) if event.sport in sport_types else 0
+                current_team1_index = team_types.index(event.team1) if event.team1 in team_types else 0
+                current_team2_index = team_types.index(event.team2) if event.team2 in team_types else 0
+
+                new_sport = st.selectbox("Esporte", sport_types, index=current_sport_index, key=f"sport_{event.id}")
+                new_team1 = st.selectbox("Time 1", team_types, index=current_team1_index, key=f"team1_{event.id}")
+                new_team2 = st.selectbox("Time 2", team_types, index=current_team2_index, key=f"team2_{event.id}")
                 new_odds_team1 = st.number_input("Odds Time 1", value=float(event.odds_team1), min_value=0.01, format="%.2f", key=f"odds1_{event.id}")
                 new_odds_team2 = st.number_input("Odds Time 2", value=float(event.odds_team2), min_value=0.01, format="%.2f", key=f"odds2_{event.id}")
                 new_date_str = st.text_input("Data e Hora (YYYY-MM-DD HH:MM)", value=event.date.replace("T", " ")[:16], key=f"date_{event.id}")
                 new_status = st.selectbox("Status", ["scheduled", "ongoing", "finished", "cancelled"], index=["scheduled", "ongoing", "finished", "cancelled"].index(event.status), key=f"status_{event.id}")
-                new_winner = st.text_input("Vencedor (Nome do Time)", value=event.winner if event.winner else "", key=f"winner_{event.id}")
+                
+                # O vencedor também deve ser um dos times existentes
+                winner_options = ["N/A"] + team_types # Adiciona N/A para quando não há vencedor
+                current_winner_index = winner_options.index(event.winner) if event.winner in winner_options else 0
+                new_winner = st.selectbox("Vencedor (Nome do Time)", winner_options, index=current_winner_index, key=f"winner_{event.id}")
+                if new_winner == "N/A":
+                    new_winner = None
 
                 col_update, col_delete = st.columns(2)
                 with col_update:
                     if st.form_submit_button("Atualizar Evento", key=f"update_btn_{event.id}"):
                         try:
-                            new_event_date = datetime.strptime(new_date_str, "%Y-%m-%d %H:%M")
+                            event_date_obj = datetime.strptime(new_date_str, "%Y-%m-%d %H:%M")
                             updated_event = EventController.update_event(
                                 event.id, new_sport, new_team1, new_team2, new_odds_team1, new_odds_team2,
-                                new_event_date.isoformat(), new_status, new_winner if new_winner else None
+                                event_date_obj.isoformat(), new_status, new_winner
                             )
                             if updated_event:
                                 st.success(f"Evento {event.id} atualizado com sucesso!")
