@@ -15,3 +15,8 @@ class BettingController:
     def update_bet_status(betid, status, prize_amount=None):
         bet = BettingService.update_bet_status(betid, status, prize_amount)
         return bet
+
+    @staticmethod
+    def get_winning_bets(eventid, winning_team):
+        bets = BettingService.get_winning_bets(eventid, winning_team)
+        return bets

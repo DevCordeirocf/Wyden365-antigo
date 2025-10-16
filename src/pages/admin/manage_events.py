@@ -1,5 +1,7 @@
 import streamlit as st
 from src.controllers.event_controller import EventController
+from src.controllers.betting_controller import BettingController
+from src.controllers.wallet_controller import WalletController
 from datetime import datetime
 
 def manage_events_page():
@@ -52,7 +54,7 @@ def manage_events_page():
                 new_odds_team1 = st.number_input("Odds Time 1", value=float(event.odds_team1), min_value=0.01, format="%.2f", key=f"odds1_{event.id}")
                 new_odds_team2 = st.number_input("Odds Time 2", value=float(event.odds_team2), min_value=0.01, format="%.2f", key=f"odds2_{event.id}")
                 new_date_str = st.text_input("Data e Hora (YYYY-MM-DD HH:MM)", value=event.date.replace("T", " ")[:16], key=f"date_{event.id}")
-                new_status = st.selectbox("Status",["scheduled", "ongoing", "finished", "cancelled", "aberto"],index=["scheduled", "ongoing", "finished", "cancelled", "aberto"].index(event.status),key=f"status_{event.id}")
+                new_status = st.selectbox("Status", ["scheduled", "ongoing", "finished", "cancelled"], index=["scheduled", "ongoing", "finished", "cancelled"].index(event.status), key=f"status_{event.id}")
                 new_winner = st.text_input("Vencedor (Nome do Time)", value=event.winner if event.winner else "", key=f"winner_{event.id}")
 
                 col_update, col_delete = st.columns(2)
@@ -67,6 +69,18 @@ def manage_events_page():
                             if updated_event:
                                 st.success(f"Evento {event.id} atualizado com sucesso!")
                                 st.json(updated_event.__dict__)
+                                
+                                # Lógica para distribuir ganhos se o evento foi finalizado e tem um vencedor
+                                if updated_event.status == "finished" and updated_event.winner:
+                                    st.info(f"Processando ganhos para o evento {updated_event.id}...")
+                                    winning_bets = BettingController.get_winning_bets(updated_event.id, updated_event.winner)
+                                    if winning_bets:
+                                        for bet in winning_bets:
+                                            WalletController.update_balance(bet.userid, bet.potential_prize)
+                                            BettingController.update_bet_status(bet.id, "won", bet.potential_prize)
+                                            st.success(f"Usuário {bet.userid} ganhou R$ {bet.potential_prize:.2f} na aposta {bet.id}!")
+                                    else:
+                                        st.info("Nenhuma aposta vencedora para este evento.")
                                 st.rerun()
                             else:
                                 st.error(f"Erro ao atualizar evento {event.id}.")

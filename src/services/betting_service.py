@@ -78,3 +78,14 @@ class BettingService:
         except Exception as e:
             print(f"Erro ao atualizar status da aposta: {e}")
             return None
+
+    @staticmethod
+    def get_winning_bets(eventid, winning_team):
+        try:
+            response = supabase.table("bet").select("*").eq("eventid", eventid).eq("selected_team", winning_team).eq("status", "pending").execute()
+            if response.data:
+                return [Bet.from_dict(bet) for bet in response.data]
+            return []
+        except Exception as e:
+            print(f"Erro ao buscar apostas vencedoras: {e}")
+            return []
