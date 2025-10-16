@@ -23,7 +23,7 @@ class BettingService:
                 "amount": amount,
                 "odds": odds,
                 "potential_prize": potential_prize,
-                "status": "pending"
+                "status": "esperando"
             }
             response = supabase.table("bet").insert(bet_data).execute()
             if response.data:
@@ -82,7 +82,7 @@ class BettingService:
     @staticmethod
     def get_winning_bets(eventid, winning_team):
         try:
-            response = supabase.table("bet").select("*").eq("eventid", eventid).eq("selected_team", winning_team).eq("status", "pending").execute()
+            response = supabase.table("bet").select("*").eq("eventid", eventid).eq("selected_team", winning_team).eq("status", "esperando").execute()
             if response.data:
                 return [Bet.from_dict(bet) for bet in response.data]
             return []
