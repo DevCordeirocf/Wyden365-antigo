@@ -3,7 +3,7 @@ from src.models.event import Event
 
 class EventController:
     @staticmethod
-    def create_event(sport, team1, team2, odds_team1, odds_team2, date, status="scheduled", winner=None):
+    def create_event(sport, team1, team2, odds_team1, odds_team2, date, status="agendado", winner=None):
         event = EventService.create_event(sport, team1, team2, odds_team1, odds_team2, date, status, winner)
         return event
 

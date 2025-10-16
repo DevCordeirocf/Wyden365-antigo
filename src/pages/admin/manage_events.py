@@ -6,7 +6,7 @@ from src.services.event_service import EventService # Importar o EventService pa
 from datetime import datetime
 
 def manage_events_page():
-    st.title("Gerenciar Eventos (Minimalista)")
+    st.title("Gerenciar Eventos")
 
     # Obter os valores dos enums do Supabase
     sport_types = EventService.get_enum_values("sport_type")
@@ -47,14 +47,6 @@ def manage_events_page():
 
     if events:
         for event in events:
-            st.write(f"--- Evento ID: {event.id} ---")
-            st.write(f"Esporte: {event.sport}")
-            st.write(f"Times: {event.team1} vs {event.team2}")
-            st.write(f"Odds: {event.odds_team1} / {event.odds_team2}")
-            st.write(f"Data: {event.date}")
-            st.write(f"Status: {event.status}")
-            st.write(f"Vencedor: {event.winner if event.winner else 'N/A'}")
-
             # Formulário para atualizar evento
             with st.form(f"update_event_form_{event.id}"):
                 st.write(f"Atualizar Evento {event.id}")
@@ -70,14 +62,16 @@ def manage_events_page():
                 new_odds_team1 = st.number_input("Odds Time 1", value=float(event.odds_team1), min_value=0.01, format="%.2f", key=f"odds1_{event.id}")
                 new_odds_team2 = st.number_input("Odds Time 2", value=float(event.odds_team2), min_value=0.01, format="%.2f", key=f"odds2_{event.id}")
                 new_date_str = st.text_input("Data e Hora (YYYY-MM-DD HH:MM)", value=event.date.replace("T", " ")[:16], key=f"date_{event.id}")
-                new_status = st.selectbox("Status", ["scheduled", "ongoing", "finished", "cancelled"], index=["scheduled", "ongoing", "finished", "cancelled"].index(event.status), key=f"status_{event.id}")
-                
-                # O vencedor também deve ser um dos times existentes
+                new_status = st.selectbox("Status", ["agendado", "em andamento", "finalizado", "cancelado"], index=["agendado", "em andamento", "finalizado", "cancelado"].index(event.status), key=f"status_{event.id}")
+
+                    
                 winner_options = ["N/A"] + team_types # Adiciona N/A para quando não há vencedor
-                current_winner_index = winner_options.index(event.winner) if event.winner in winner_options else 0
-                new_winner = st.selectbox("Vencedor (Nome do Time)", winner_options, index=current_winner_index, key=f"winner_{event.id}")
-                if new_winner == "N/A":
-                    new_winner = None
+                new_winner = None
+                if new_status == "finalizado":
+                    current_winner_index = winner_options.index(event.winner) if event.winner in winner_options else 0
+                    new_winner = st.selectbox("Vencedor (Nome do Time)", winner_options, index=current_winner_index, key=f"winner_{event.id}")
+                    if new_winner == "N/A":
+                        new_winner = None
 
                 col_update, col_delete = st.columns(2)
                 with col_update:

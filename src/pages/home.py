@@ -8,18 +8,22 @@ def home_page():
 
     if st.session_state["logged_in"] and st.session_state["user"]:
         user_id = st.session_state.user["id"]
-        st.write(f"Bem-vindo, {st.session_state.user["name"]}!")
+        wallet = WalletController.get_user_wallet(user_id)
+        if wallet:
+            st.success(f"Bem-vindo, {st.session_state.user["name"]}! Seu saldo atual é R$ {wallet.balance:.2f}")
+        else:
+            st.write(f"Bem-vindo, {st.session_state.user["name"]}!")
 
         st.subheader("Eventos Disponíveis para Aposta")
         try:
             events = EventController.get_all_events()
             if events:
                 for event in events:
-                    st.markdown(f"### {event.sport}: {event.team1} vs {event.team2}")
-                    st.write(f"**Data:** {event.date}")
-                    st.write(f"**Status:** {event.status}")
+                    with st.expander(f"{event.sport}: {event.team1} vs {event.team2}"):
+                        st.write(f"**Data:** {event.date}")
+                        st.write(f"**Status:** {event.status}")
 
-                    if event.status == "scheduled":
+                    if event.status == "agendado":
                         st.write("--- Faça sua Aposta ---")
                         with st.form(key=f"bet_form_{event.id}"):
                             selected_team = st.radio(
@@ -29,7 +33,7 @@ def home_page():
                             )
                             amount = st.number_input(
                                 "Valor da Aposta (R$)",
-                                min_value=0.01, step=0.01, format="%.2f",
+                                min_value=5.00, step=0.01, format="%.2f",
                                 key=f"amount_{event.id}"
                             )
 

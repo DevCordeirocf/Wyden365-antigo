@@ -11,15 +11,21 @@ def bets_page():
         try:
             bets = BettingController.get_user_bets(user_id)
             if bets:
+                import pandas as pd
+                bet_data = []
                 for bet in bets:
-                    st.write(f"**Aposta ID:** {bet.id}")
-                    st.write(f"**Evento ID:** {bet.eventid}")
-                    st.write(f"**Time Selecionado:** {bet.selected_team}")
-                    st.write(f"**Valor:** {bet.amount}")
-                    st.write(f"**Odds:** {bet.odds}")
-                    st.write(f"**Prêmio Potencial:** {bet.potential_prize}")
-                    st.write(f"**Status:** {bet.status}")
-                    st.markdown("---")
+                    bet_data.append({
+                        "ID da Aposta": bet.id,
+                        "ID do Evento": bet.eventid,
+                        "Time Selecionado": bet.selected_team,
+                        "Valor": bet.amount,
+                        "Odds": bet.odds,
+                        "Prêmio Potencial": bet.potential_prize,
+                        "Status": bet.status
+                    })
+
+                df = pd.DataFrame(bet_data)
+                st.dataframe(df)
             else:
                 st.info("Você ainda não fez nenhuma aposta.")
         except Exception as e:
